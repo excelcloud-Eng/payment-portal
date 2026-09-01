@@ -123,15 +123,16 @@ data "aws_iam_policy_document" "github_actions_trust" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # Allow the main branch (push -> apply) and any pull_request run
-    # (validate/plan only) from this exact repo. Tighten further (e.g. to a
-    # specific environment: suffix) if you add GitHub Environments per branch.
+    # Allow jobs from this exact repo. Include both the name-based subject
+    # (repo:org/repo:...) and the immutable ID form GitHub may emit
+    # (repo:org@id/repo@id:...). Environment-gated jobs use
+    # "...:environment:<name>" rather than "...:ref:refs/heads/...".
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
-        "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main",
-        "repo:${var.github_org}/${var.github_repo}:pull_request",
+        "repo:${var.github_org}/${var.github_repo}:*",
+        "repo:${var.github_org}@*/${var.github_repo}@*:*",
       ]
     }
   }
@@ -173,12 +174,10 @@ data "aws_iam_policy_document" "github_actions_permissions" {
   statement {
     sid    = "ArtifactBucket"
     effect = "Allow"
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:ListBucket",
-      "s3:GetBucketVersioning",
-    ]
+    # Full s3:* on the artifact bucket only — Terraform needs many non-
+    # GetBucket* APIs (GetAccelerateConfiguration, PutLifecycleConfiguration,
+    # GetEncryptionConfiguration, etc.) when managing the bucket.
+    actions   = ["s3:*"]
     resources = [
       "arn:aws:s3:::${var.project_name}-lambda-artifacts-*",
       "arn:aws:s3:::${var.project_name}-lambda-artifacts-*/*",

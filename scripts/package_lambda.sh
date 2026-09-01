@@ -10,6 +10,7 @@ OUTPUT_ZIP="${1:-$APP_DIR/build/app.zip}"
 
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
+mkdir -p "$(dirname "$OUTPUT_ZIP")"
 
 pip install \
   --requirement "$APP_DIR/src/requirements.txt" \
@@ -19,7 +20,10 @@ pip install \
 
 cp "$APP_DIR/src/handler.py" "$BUILD_DIR/"
 
-(cd "$BUILD_DIR" && zip -r -q "$(basename "$OUTPUT_ZIP")" .)
-mv "$BUILD_DIR/$(basename "$OUTPUT_ZIP")" "$OUTPUT_ZIP"
+# Zip into a temp file outside BUILD_DIR, then move into place. Avoids
+# `mv samefile samefile` when OUTPUT_ZIP lives under BUILD_DIR (the default).
+TMP_ZIP="$(mktemp "${TMPDIR:-/tmp}/app.zip.XXXXXX")"
+(cd "$BUILD_DIR" && zip -r -q "$TMP_ZIP" .)
+mv -f "$TMP_ZIP" "$OUTPUT_ZIP"
 
 echo "Built $OUTPUT_ZIP"
