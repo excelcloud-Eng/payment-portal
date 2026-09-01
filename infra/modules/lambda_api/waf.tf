@@ -83,6 +83,7 @@ resource "aws_wafv2_web_acl" "api" {
 }
 
 resource "aws_wafv2_web_acl_association" "api" {
-  resource_arn = aws_apigatewayv2_stage.default.arn
+  # WAF rejects literal "$" in the stage ARN; API Gateway $default must be %24-encoded.
+  resource_arn = replace(aws_apigatewayv2_stage.default.arn, "$", "%24")
   web_acl_arn  = aws_wafv2_web_acl.api.arn
 }
