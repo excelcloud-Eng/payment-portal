@@ -1,3 +1,8 @@
+# NOTE: Regional WAFv2 cannot be associated directly with API Gateway HTTP
+# APIs (protocol_type = "HTTP"). AssociateWebACL only accepts REST API stage
+# ARNs (/restapis/...), ALBs, AppSync, etc. The Web ACL below is provisioned
+# so it can be attached later via CloudFront or a REST API migration; it is
+# intentionally not associated here.
 resource "aws_wafv2_web_acl" "api" {
   name        = "${var.project_name}-${var.environment}-api-waf"
   description = "Baseline WAF for the payment portal public API: managed rule sets + rate limiting."
@@ -80,10 +85,4 @@ resource "aws_wafv2_web_acl" "api" {
   }
 
   tags = var.tags
-}
-
-resource "aws_wafv2_web_acl_association" "api" {
-  # WAF rejects literal "$" in the stage ARN; API Gateway $default must be %24-encoded.
-  resource_arn = replace(aws_apigatewayv2_stage.default.arn, "$", "%24")
-  web_acl_arn  = aws_wafv2_web_acl.api.arn
 }
