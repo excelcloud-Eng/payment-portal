@@ -20,10 +20,11 @@ pip install \
 
 cp "$APP_DIR/src/handler.py" "$BUILD_DIR/"
 
-# Zip into a temp file outside BUILD_DIR, then move into place. Avoids
-# `mv samefile samefile` when OUTPUT_ZIP lives under BUILD_DIR (the default).
-TMP_ZIP="$(mktemp "${TMPDIR:-/tmp}/app.zip.XXXXXX")"
+# Zip to a path outside BUILD_DIR so we never mv a file onto itself.
+TMP_DIR="$(mktemp -d)"
+TMP_ZIP="$TMP_DIR/app.zip"
 (cd "$BUILD_DIR" && zip -r -q "$TMP_ZIP" .)
 mv -f "$TMP_ZIP" "$OUTPUT_ZIP"
+rmdir "$TMP_DIR"
 
 echo "Built $OUTPUT_ZIP"
