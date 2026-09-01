@@ -1,0 +1,19 @@
+# Baseline Checkov gate for infra/. The skips below are deliberate scope/cost
+# tradeoffs made explicitly for this single-environment build (see README),
+# not blind suppressions — revisit before this ever handles real cardholder
+# data or scales past one environment.
+directory:
+  - infra
+framework:
+  - terraform
+skip-check:
+  - CKV_AWS_18   # S3 access logging: no log-analysis bucket in this build
+  - CKV_AWS_144  # S3 cross-region replication: single region by design
+  - CKV_AWS_133  # RDS enhanced monitoring: cost tradeoff for one small instance
+  - CKV_AWS_157  # RDS Multi-AZ: single environment for now
+  - CKV_AWS_226  # RDS Performance Insights: cost tradeoff
+  - CKV_AWS_161  # RDS IAM authentication: using Secrets Manager instead
+  - CKV_AWS_272  # Lambda code signing: future work
+  - CKV_AWS_116  # Lambda DLQ: placeholder app has no async invocations
+  - CKV_AWS_115  # Lambda reserved concurrency: future work
+soft-fail: false
