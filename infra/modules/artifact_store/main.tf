@@ -1,6 +1,6 @@
 resource "aws_s3_bucket" "lambda_artifacts" {
   bucket = "${var.project_name}-lambda-artifacts-${var.account_id}"
-  tags   = var.tags
+  tags   = merge(var.tags, { Environment = var.environment })
 }
 
 resource "aws_s3_bucket_versioning" "lambda_artifacts" {
